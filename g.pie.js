@@ -19,13 +19,31 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         cut = 9,
         defcut = true;
     chart.covers = covers;
-    if (len == 1) {
-        series.push(this.circle(cx, cy, r).attr({fill: opts.colors && opts.colors[0] || this.g.colors[0], stroke: opts.stroke || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
-        covers.push(this.circle(cx, cy, r).attr({href: opts.href ? opts.href[0] : null}).attr(this.g.shim));
-        total = values[0];
-        values[0] = {value: values[0], order: 0, valueOf: function () { return this.value; }};
-        series[0].middle = {x: cx, y: cy};
-        series[0].mangle = 180;
+    var sum = 0;
+    for (var i = 0; i < len; i++)
+        sum += values[i];
+    var single = false;
+    var single_index = -1;
+    for (var i = 0; i < len; i++)
+        if (sum == values[i]) {
+            single = true;
+            single_index = i;
+            break;
+        }
+    if (len == 1 || single == true) {
+        for(var i = 0; i < len; i++) {
+            if (i == single_index) {
+                series.push(this.circle(cx, cy, r).attr({fill: opts.colors && opts.colors[i] || this.g.colors[i], stroke: opts.stroke || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
+                covers.push(this.circle(cx, cy, r).attr({href: opts.href ? opts.href[i] : null}).attr(this.g.shim));
+            } else {
+                series.push(this.circle(cx, cy, 0).attr({fill: opts.colors && opts.colors[i] || this.g.colors[i], stroke: opts.stroke || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
+                covers.push(this.circle(cx, cy, 0).attr({href: opts.href ? opts.href[i] : null}).attr(this.g.shim));
+            }
+            values[i] = {value: values[i], order: i, valueOf: function () { return this.value; }};
+            series[i].middle = {x: cx, y: cy};
+            series[i].mangle = 180;
+        }
+        total = values[single_index];
     } else {
         function sector(cx, cy, r, startAngle, endAngle, fill) {
             var rad = Math.PI / 180,
