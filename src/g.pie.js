@@ -18,14 +18,31 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         others = 0,
         cut = 9,
         defcut = true;
-    chart.covers = covers;
-    if (len == 1) {
-        series.push(this.circle(cx, cy, r).attr({fill: opts.colors && opts.colors[0] || this.g.colors[0], stroke: opts.stroke || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
-        covers.push(this.circle(cx, cy, r).attr(this.g.shim));
-        total = values[0];
-        values[0] = {value: values[0], order: 0, valueOf: function () { return this.value; }};
-        series[0].middle = {x: cx, y: cy};
-        series[0].mangle = 180;
+
+    var sum = 0;
+    for (var i = 0; i < len; i++)
+        sum += values[i];
+    var single = false;
+    var single_index = -1;
+    for (var i = 0; i < len; i++)
+        if (sum == values[i]) {
+            single = true;
+            single_index = i;
+            break;
+        }
+    if (len == 1 || single == true) {
+        for(var i = 0; i < len; i++) {
+            var radius = 0.1;
+            if (i == single_index) {
+                radius = r;
+            }
+            series.push(this.circle(cx, cy, radius).attr({fill: opts.colors && opts.colors[i] || this.g.colors[i], stroke: opts.stroke || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
+            covers.push(this.circle(cx, cy, radius).attr({href: opts.href ? opts.href[i] : null}).attr(this.g.shim));
+            values[i] = {value: values[i], order: i, valueOf: function () { return this.value; }};
+            series[i].middle = {x: cx, y: cy};
+            series[i].mangle = 180;
+        }
+        total = values[single_index];
     } else {
         function sector(cx, cy, r, startAngle, endAngle, fill) {
             var rad = Math.PI / 180,
@@ -81,10 +98,10 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         }
         for (i = 0; i < len; i++) {
             p = paper.path(sectors[i].attr("path")).attr(this.g.shim);
-            opts.href && opts.href[i] && p.attr({href: opts.href[i]});
-            p.attr = function () {};
+            var valueOrder = values[i].order;
+            opts.href && opts.href[valueOrder] && p.attr({href: opts.href[valueOrder]});
+            //p.attr = function () {}; // this breaks translate!
             covers.push(p);
-            series.push(p);
         }
     }
 
@@ -202,5 +219,13 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
     chart.push(series, covers);
     chart.series = series;
     chart.covers = covers;
+    
+    var w = paper.width,
+        h = paper.height,
+        bb = chart.getBBox(),
+        tr = [(w - bb.width)/2 - bb.x, (h - bb.height)/2 - bb.y];
+    cx += tr[0];
+    cy += tr[1];
+    chart.translate.apply(chart, tr);
     return chart;
 };
