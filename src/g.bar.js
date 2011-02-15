@@ -17,7 +17,19 @@ Raphael.fn.g.barchart = function (x, y, width, height, values, opts) {
         paper = this,
         multi = 0,
         colors = opts.colors || this.g.colors,
-        len = values.length;
+        len = values.length,
+        origvalues = values.slice(0),
+        hasneg = Math.min.apply(Math,origvalues) < 0 ? true : false,
+        gheight = height;
+
+    if (hasneg) {
+        values = [];
+        var l = origvalues.length;
+        for(var i = 0; i < l ; i++ ) {
+            values.push(Math.abs(origvalues[i]));
+        }
+        total = Math.max.apply(Math, values);
+    }
     if (this.raphael.is(values[0], "array")) {
         total = [];
         multi = len;
@@ -43,7 +55,8 @@ Raphael.fn.g.barchart = function (x, y, width, height, values, opts) {
                 }
             }
         }
-        total = Math.max.apply(Math, opts.stacked ? stacktotal : total);
+        total = Math.max.apply(Math, opts.stacked ? stacktotal : total),
+		hasneg = Math.min.apply(Math, opts.stacked ? stacktotal : total) < 0 ? true : false;
     }
     
     total = (opts.to) || total;
@@ -52,7 +65,11 @@ Raphael.fn.g.barchart = function (x, y, width, height, values, opts) {
         barvgutter = opts.vgutter == null ? 20 : opts.vgutter,
         stack = [],
         X = x + barhgutter,
-        Y = (height - 2 * barvgutter) / total;
+        Y = (gheight - 2 * barvgutter) / total;
+	if( hasneg ) {
+		gheight = ((gheight+barvgutter*2)/2)+1;
+		Y = ((gheight - 2 * barvgutter ) / (total));
+	}
     if (!opts.stretch) {
         barhgutter = Math.round(barhgutter);
         barwidth = Math.floor(barwidth);
@@ -61,19 +78,23 @@ Raphael.fn.g.barchart = function (x, y, width, height, values, opts) {
     for (var i = 0; i < len; i++) {
         stack = [];
         for (var j = 0; j < (multi || 1); j++) {
-            var h = Math.round((multi ? values[j][i] : values[i]) * Y),
-                top = y + height - barvgutter - h,
-                bar = this.g.finger(Math.round(X + barwidth / 2), top + h, barwidth, h, true, type).attr({stroke: "none", fill: colors[multi ? j : i]});
+            var h =  Math.round((multi ? values[j][i] : values[i]) * Y),
+                top = y + gheight - barvgutter - Math.abs(h),
+                bar =  this.g.finger(Math.round(X + barwidth / 2), top+Math.abs(h), barwidth, Math.abs(h), true, type);
+
+            if(hasneg && (origvalues[i] < 0))
+                bar.rotate(180).translate(0,bar.getBBox().height);
+            bar.attr({stroke: "none", fill: colors[multi ? j : i]});
             if (multi) {
                 bars[j].push(bar);
             } else {
                 bars.push(bar);
             }
-            bar.y = top;
+            bar.y = (hasneg && origvalues[i] < 0) ? gheight : top;
             bar.x = Math.round(X + barwidth / 2);
             bar.w = barwidth;
             bar.h = h;
-            bar.value = multi ? values[j][i] : values[i];
+            bar.value = multi ? values[j][i] : hasneg ? origvalues[i] : values[i];
             if (!opts.stacked) {
                 X += barwidth;
             } else {
@@ -115,17 +136,22 @@ Raphael.fn.g.barchart = function (x, y, width, height, values, opts) {
                 covers.push(cover = this.rect(Math.round(X), y + barvgutter, barwidth, height - barvgutter).attr(this.g.shim));
                 cover.bar = multi ? bars[j][i] : bars[i];
                 cover.value = cover.bar.value;
+                cover.index = i;
                 X += barwidth;
             }
             X += barhgutter;
         }
     }
-    chart.label = function (labels, isBottom, rotate) {
+    chart.label = function (labels, isBottom, rotate, force) {
+        opts = opts || {};
+        force = (force === undefined) ? false : force;
+        ab53fd2f28c7fd57268743b0f468a3d56ffeea18:g.bar.js
         labels = labels || [];
         isBottom = isBottom == undefined ? true : isBottom;
-	rotate = rotate == undefined ? false : rotate;
+        rotate = rotate == undefined ? false : rotate;
         this.labels = paper.set();
-        var L, l = -Infinity;
+        var L, l = -Infinity,
+            ldown = false;
         if (opts.stacked) {
             for (var i = 0; i < len; i++) {
                 var tot = 0;
@@ -134,12 +160,23 @@ Raphael.fn.g.barchart = function (x, y, width, height, values, opts) {
                     if (j == 0) {
                         var label = paper.g.labelise(labels[j][i], tot, total);
                         L = paper.g.text(bars[j][i].x, isBottom ? y + height - barvgutter / 2 : bars[j][i].y - 10, label);
-			if (rotate) {
-				L.rotate(90);
-			}
+                        if (rotate) {
+                            L.rotate(90);
+                        }
                         var bb = L.getBBox();
                         if (bb.x - 7 < l) {
-                            L.remove();
+                            if( !force ) {
+                                L.remove();
+                            } else {
+                                if( ldown === false ) {
+                                    L.translate(0,bb.height);
+                                    ldown = true;
+                                } else {
+                                    ldown = false;
+                                }
+                                this.labels.push(L);
+                                l = bb.x + bb.width;
+                            }
                         } else {
                             this.labels.push(L);
                             l = bb.x + (rotate ? bb.height : bb.width);
@@ -153,16 +190,28 @@ Raphael.fn.g.barchart = function (x, y, width, height, values, opts) {
                     // did not remove the loop because don't yet know whether to accept multi array input for arrays
                     var label = paper.g.labelise(multi ? labels[0] && labels[0][i] : labels[i], multi ? values[0][i] : values[i], total);
                      L = paper.g.text(bars[0][i].x, isBottom ? y + 5 + height - barvgutter / 2 : bars[0][i].y - 10, label);
-			if (rotate) {
-				L.rotate(90);
-				// If we rotated it, we need to move it as well. Still have to use the width
-				// to get the "length" of the label, divided it in two and shift down.
-				L.translate(0, (L.getBBox().width / 2));
-			}
+                    if (rotate) {
+                        L.rotate(90);
+                        // If we rotated it, we need to move it as well. Still have to use the width
+                        // to get the "length" of the label, divided it in two and shift down.
+                        L.translate(0, (L.getBBox().width / 2));
+                    }
                     var bb = L.getBBox();
-//                    if (bb.x - 7 < l) {
                     if (bb.x - (this.getBBox().width) < l) {
                         L.remove();
+                    if (bb.x - 7 < l) {
+                        if( !force ) {
+                            L.remove();
+                        } else {
+                            if( ldown === false ) {
+                                L.translate(0,bb.height);
+                                ldown = true;
+                            } else {
+                                ldown = false;
+                            }
+                            this.labels.push(L);
+                            l = bb.x + bb.width;
+                        }
                     } else {
                         this.labels.push(L);
                         l = bb.x + (rotate ? bb.height : bb.width);

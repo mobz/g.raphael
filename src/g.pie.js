@@ -13,7 +13,7 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         series = this.set(),
         order = [],
         len = values.length,
-        angle = 0,
+        angle = opts.angle || 0,
         total = 0,
         others = 0,
         cut = 9,
@@ -30,6 +30,7 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
             single_index = i;
             break;
         }
+    chart.covers = covers;
     if (len == 1 || single == true) {
         for(var i = 0; i < len; i++) {
             var radius = 0.1;
@@ -60,19 +61,23 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
             total += values[i];
             values[i] = {value: values[i], order: i, valueOf: function () { return this.value; }};
         }
-        values.sort(function (a, b) {
-            return b.value - a.value;
-        });
-        for (i = 0; i < len; i++) {
-            if (defcut && values[i] * 360 / total <= 1.5) {
-                cut = i;
-                defcut = false;
-            }
-            if (i > cut) {
-                defcut = false;
-                values[cut].value += values[i];
-                values[cut].others = true;
-                others = values[cut].value;
+        if(opts.sort || opts.sort == undefined) {
+            values.sort(function (a, b) {
+                return b.value - a.value;
+            });
+        } 
+        if(!opts.ignoreZeros || opts.ignoreZeros == undefined) {
+            for (i = 0; i < len; i++) {
+                if (defcut && values[i] * 360 / total <= 1.5) {
+                    cut = i;
+                    defcut = false;
+                } 
+                if (i > cut) {
+                    defcut = false;
+                    values[cut].value += values[i];
+                    values[cut].others = true;
+                    others = values[cut].value;
+                } 
             }
         }
         len = Math.min(cut + 1, values.length);
