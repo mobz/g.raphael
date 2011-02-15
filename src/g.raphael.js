@@ -379,11 +379,7 @@
         f = round((from - (i > 0 ? 0 : .5)) * Math.pow(10, i)) / Math.pow(10, i);
         return {from: f, to: t, power: i};
     };
-    Raphael.fn.g.axis = function (x, y, length, from, to, steps, orientation, labels, type, dashsize, opts ) {
-		// Custom options for label handling
-		opts = opts || {};
-		opts.labelrotate = opts.labelrotate || 0;
-		opts.forcelabels = opts.forcelabels || false;
+    Raphael.fn.g.axis = function (x, y, length, from, to, steps, orientation, labels, type, dashsize) {
         dashsize = dashsize == null ? 2 : dashsize;
         type = type || "t";
         steps = steps || 10;
@@ -398,7 +394,6 @@
         var label = f,
             rnd = i > 0 ? i : 0;
             dx = length / steps;
-
         if (+orientation == 1 || +orientation == 3) {
             var Y = y,
                 addon = (orientation - 1 ? 1 : -1) * (dashsize + 3 + !!(orientation - 1));
@@ -422,18 +417,14 @@
                 prev = 0;
             while (X <= x + length) {
                 type != "-" && type != " " && (path = path.concat(["M", X + .5, y - (type == "+" ? dashsize : !!orientation * dashsize * 2), "l", 0, dashsize * 2 + 1]));
-                text.push(txt = this.text(X, y + addon, (labels && labels[j++]) || (Math.round(label) == label ? label : +label.toFixed(rnd))).attr(this.g.txtattr).attr({rotation: opts.labelrotate} ));
+                text.push(txt = this.text(X, y + addon, (labels && labels[j++]) || (Math.round(label) == label ? label : +label.toFixed(rnd))).attr(this.g.txtattr));
                 var bb = txt.getBBox();
-               	if (prev >= bb.x - 5) {
-					if( ! opts.forcelabels ) {
-                		text.pop(text.length - 1).remove();
-					} else {
-						txt.translate(0,16);
-					}
-               	} else {
-                   		prev = bb.x + bb.width;
-               	}
-		        label += d;
+                if (prev >= bb.x - 5) {
+                    text.pop(text.length - 1).remove();
+                } else {
+                    prev = bb.x + bb.width;
+                }
+                label += d;
                 X += dx;
             }
             if (Math.round(X - dx - x - length)) {
