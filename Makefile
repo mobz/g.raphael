@@ -1,15 +1,29 @@
-SRC_DIR = src
-BUILD_DIR = build
-
 DIR_PREFIX = .
+
+SRC_DIR = ${DIR_PREFIX}/src
+BUILD_DIR = ${DIR_PREFIX}/build
+DOCS_DIR = ${DIR_PREFIX}/docs
 DIST_DIR = ${DIR_PREFIX}/dist
+MD_THEME = ${BUILD_DIR}/markdown-theme
 
 SOURCES := $(patsubst ${SRC_DIR}/%.js, %, $(wildcard ${SRC_DIR}/*.js))
+DOC_SOURCES := $(patsubst ${DOCS_DIR}/%.markdown, %, $(wildcard ${DOCS_DIR}/*.markdown))
 
 MINJAR = java -jar ${BUILD_DIR}/yuicompressor-2.4.2.jar
+MARKDOWN = perl ${BUILD_DIR}/Markdown_1.0.1/Markdown.pl
 
-all: script standalone min
+all: script standalone min docs
 	@@echo "Script build complete."
+
+docs: script
+	@@echo "Building documentation..."
+	@@mkdir -p ${DIST_DIR}/docs
+	@@for f in ${DOC_SOURCES} ; do \
+  	cat ${MD_THEME}/header.html > ${DIST_DIR}/docs/$$f.html ; \
+		${MARKDOWN} ${DOCS_DIR}/$$f.markdown >> ${DIST_DIR}/docs/$$f.html ; \
+		cat ${MD_THEME}/footer.html >> ${DIST_DIR}/docs/$$f.html ; \
+	done
+	@@cp -r ${MD_THEME}/include/* ${DIST_DIR}/docs
 
 script:
 	@@echo "Copying scripts..."
@@ -23,7 +37,7 @@ standalone:
 	@@echo "Creating standalone script..."
 	@@cat ${SRC_DIR}/raphael.js ${SRC_DIR}/g.raphael.js ${SRC_DIR}/g.bar.js ${SRC_DIR}/g.dot.js ${SRC_DIR}/g.line.js ${SRC_DIR}/g.pie.js > ${DIST_DIR}/g.raphael.standalone.js ;
 
-min: script
+min: script standalone
 	@@echo "Building minified scripts..."
 	@@mkdir -p ${DIST_DIR}/min
 	@@for f in ${SOURCES} ; do \
