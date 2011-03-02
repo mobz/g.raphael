@@ -10,7 +10,7 @@ To start over and remove all the distribution files, use:
 
 ## What is created
 
-4 versions of g.raphael are built
+### 4 versions of g.raphael are built
 
 1. Unmodifed original source version.
        Located in the dist/src directory
@@ -20,3 +20,8 @@ To start over and remove all the distribution files, use:
        Located at dist/g.raphael.standalone.js
 4. A Minified all-in-one, including all files and minified.
        Located at dist/g.raphael.standalone.min.js 
+
+### HTML Documentation
+
+In addition html documentation is created using [kennyshen's g.raphael fork](https://github.com/kennyshen/g.raphael) and the [adc-markdown-theme from drewyeaton](https://github.com/drewyeaton/adc-markdown-theme) 
+       Located at dist/docs
