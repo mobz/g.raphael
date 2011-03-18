@@ -12,8 +12,12 @@ DOC_SOURCES := $(patsubst ${DOCS_DIR}/%.markdown, %, $(wildcard ${DOCS_DIR}/*.ma
 MINJAR = java -jar ${BUILD_DIR}/yuicompressor-2.4.2.jar
 MARKDOWN = perl ${BUILD_DIR}/Markdown_1.0.1/Markdown.pl
 
-all: script standalone min docs
+all: script standalone min docs examples
 	@@echo "Script build complete."
+
+examples: script standalone min
+	@@echo "Copying minified standalone to examples"
+	@@cp ${DIST_DIR}/g.raphael.standalone.min.js examples/lib
 
 docs: script
 	@@echo "Building documentation..."
