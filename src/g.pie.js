@@ -220,12 +220,14 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
     chart.series = series;
     chart.covers = covers;
     
-    var w = paper.width,
-        h = paper.height,
-        bb = chart.getBBox(),
-        tr = [(w - bb.width)/2 - bb.x, (h - bb.height)/2 - bb.y];
-    cx += tr[0];
-    cy += tr[1];
-    chart.translate.apply(chart, tr);
+	if (opts.centered) {
+    	var w = paper.width,
+        	h = paper.height,
+        	bb = chart.getBBox(),
+        	tr = [(w - bb.width)/2 - bb.x, (h - bb.height)/2 - bb.y];
+    	cx += tr[0];
+    	cy += tr[1];
+   		chart.translate.apply(chart, tr);
+    }
     return chart;
 };
