@@ -36,7 +36,7 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
             if (i == single_index) {
                 radius = r;
             }
-            series.push(this.circle(cx, cy, radius).attr({fill: opts.colors && opts.colors[i] || this.g.colors[i], stroke: opts.stroke || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
+            series.push(this.circle(cx, cy, radius).attr({fill: opts.colors && opts.colors[i] || this.g.colors[i], stroke: opts.stroke || opts.nolines && opts.colors[i] || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
             covers.push(this.circle(cx, cy, radius).attr({href: opts.href ? opts.href[i] : null}).attr(this.g.shim));
             values[i] = {value: values[i], order: i, valueOf: function () { return this.value; }};
             series[i].middle = {x: cx, y: cy};
@@ -88,7 +88,7 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
                 var ipath = sector(cx, cy, 1, angle, angle - 360 * values[i] / total).join(",");
             }
             var path = sector(cx, cy, r, angle, angle -= 360 * values[i] / total);
-            var p = this.path(opts.init ? ipath : path).attr({fill: opts.colors && opts.colors[valueOrder] || this.g.colors[valueOrder] || "#666", stroke: opts.stroke || "#fff", "stroke-width": (opts.strokewidth == null ? 1 : opts.strokewidth), "stroke-linejoin": "round"});
+            var p = this.path(opts.init ? ipath : path).attr({fill: opts.colors && opts.colors[valueOrder] || this.g.colors[valueOrder] || "#666", stroke: opts.stroke || opts.nolines && opts.colors[valueOrder] || "#fff", "stroke-width": (opts.strokewidth == null ? 1 : opts.strokewidth), "stroke-linejoin": "round"});
             p.value = values[i];
             p.middle = path.middle;
             p.mangle = mangle;
