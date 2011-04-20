@@ -1551,6 +1551,14 @@
             !this.removed && (this.node.style.display = "");
             return this;
         };
+        Element[proto].toggle = function () {
+            if (this.node.style.display == "none") {
+                this.show();
+            } else {
+                this.hide();
+            }
+            return this;
+        };
         Element[proto].remove = function () {
             if (this.removed) {
                 return;
@@ -2289,6 +2297,14 @@
         };
         elproto.show = function () {
             !this.removed && (this.Group.style.display = "block");
+            return this;
+        };
+        elproto.toggle = function () {
+            if (this.Group.style.display == "none") {
+                this.show();
+            } else {
+                this.hide();
+            }
             return this;
         };
         elproto.getBBox = function () {
